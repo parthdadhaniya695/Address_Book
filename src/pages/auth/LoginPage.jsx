@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Avatar,
   Button,
@@ -13,6 +13,7 @@ import {
   IconButton,
   InputAdornment,
   Snackbar,
+  Alert,
 } from "@mui/material";
 import { Visibility, VisibilityOff, LockOutlined } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
@@ -20,32 +21,46 @@ import { useNavigate } from "react-router-dom";
 export default function LoginPage() {
   const [data, setData] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
-
   const [openMsg, setOpenMsg] = useState(false);
   const [msgToDisplay, setMsgToDisplay] = useState("");
+  const [msgType, setMsgType] = useState("info"); // success | error | info
 
   const navigate = useNavigate();
 
-  const checkLogin = (e) => {
+  // ✅ Redirect if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/");
+    }
+  }, [navigate]);
+
+  const checkLogin = async (e) => {
     e.preventDefault();
-    fetch("http://srv1022055.hstgr.cloud:3001/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.token) {
-          localStorage.setItem("token", res.token);
-          navigate("/");
-        } else {
-          localStorage.removeItem("token");
-        }
-        setMsgToDisplay(res.message);
-        setOpenMsg(true);
+    try {
+      const res = await fetch("http://srv1022055.hstgr.cloud:3001/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
       });
+      const result = await res.json();
+
+      if (result.token) {
+        localStorage.setItem("token", result.token);
+        setMsgType("success");
+        setMsgToDisplay("Login successful!");
+        navigate("/");
+      } else {
+        localStorage.removeItem("token");
+        setMsgType("error");
+        setMsgToDisplay(result.message || "Invalid credentials");
+      }
+    } catch (error) {
+      setMsgType("error");
+      setMsgToDisplay("Server error, please try again later.");
+    } finally {
+      setOpenMsg(true);
+    }
   };
 
   const handleClose = () => {
@@ -65,6 +80,7 @@ export default function LoginPage() {
         <Avatar sx={{ m: 1, bgcolor: "primary.main" }}>
           <LockOutlined />
         </Avatar>
+
         <Typography component="h1" variant="h5">
           Sign in
         </Typography>
@@ -74,7 +90,7 @@ export default function LoginPage() {
             margin="normal"
             required
             fullWidth
-            label="User Name"
+            label="Username"
             name="username"
             autoFocus
             value={data.username}
@@ -88,7 +104,6 @@ export default function LoginPage() {
             name="password"
             label="Password"
             type={showPassword ? "text" : "password"}
-            autoComplete="current-password"
             value={data.password}
             onChange={(e) => setData({ ...data, password: e.target.value })}
             InputProps={{
@@ -106,7 +121,7 @@ export default function LoginPage() {
           />
 
           <FormControlLabel
-            control={<Checkbox value="remember" color="primary" />}
+            control={<Checkbox color="primary" />}
             label="Remember me"
           />
 
@@ -133,18 +148,30 @@ export default function LoginPage() {
           </Grid>
         </Box>
       </Box>
-      <Snackbar
-        open={openMsg}
-        autoHideDuration={6000}
-        onClose={handleClose}
-        message={msgToDisplay}
-      />
+
+      {/* Snackbar for feedback */}
+      <Snackbar open={openMsg} autoHideDuration={4000} onClose={handleClose}>
+        <Alert
+          onClose={handleClose}
+          severity={msgType}
+          sx={{ width: "100%" }}
+          variant="filled"
+        >
+          {msgToDisplay}
+        </Alert>
+      </Snackbar>
+
+      {/* Logout button for testing */}
       <Button
         onClick={() => {
           localStorage.removeItem("token");
+          setMsgToDisplay("Logged out successfully!");
+          setMsgType("info");
+          setOpenMsg(true);
         }}
+        sx={{ mt: 3 }}
       >
-        LOgout
+        Logout
       </Button>
     </Container>
   );

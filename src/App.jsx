@@ -1,30 +1,35 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
-import LoginPage from "./pages/auth/LoginPage";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import LoginPage from "./pages/auth/LoginPage";
 import HomePage from "./pages";
 import ProtectedRoute from "./context/ProtectedRoute";
 import AboutPage from "./pages/about/AboutPage";
 import ListContact from "./pages/contacts/ListContact";
+import RegisterPage from "./pages/auth/RegistrationPage";
+import CreateContact from "./pages/contacts/CreateContact";
+import EditContact from "./pages/contacts/EditContact"; // ✅ Added
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage />}></Route>
+        {/* ---------- Public Routes ---------- */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-        <Route path="/" element={<ProtectedRoute></ProtectedRoute>}>
+        {/* ---------- Protected Routes ---------- */}
+        <Route path="/" element={<ProtectedRoute />}>
           <Route index element={<HomePage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/contacts" element={<ListContact />} />
+          <Route path="about" element={<AboutPage />} />
+
+          {/* ✅ Contact CRUD routes */}
+          <Route path="contacts" element={<ListContact />} />
+          <Route path="contacts/create" element={<CreateContact />} />
+          <Route path="contacts/edit/:id" element={<EditContact />} />
         </Route>
       </Routes>
     </BrowserRouter>

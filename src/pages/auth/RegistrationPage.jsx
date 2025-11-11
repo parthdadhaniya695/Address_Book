@@ -1,129 +1,160 @@
 import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
-  Container,
-  Box,
-  TextField,
+  Avatar,
   Button,
+  TextField,
+  Box,
   Typography,
-  Paper,
+  Container,
+  IconButton,
+  InputAdornment,
+  Snackbar,
   Alert,
+  Paper,
 } from "@mui/material";
+import { Visibility, VisibilityOff, LockOutlined } from "@mui/icons-material";
 
-export default function RegistrationPage() {
-  const [form, setForm] = useState({
-    name: "",
+export default function RegisterPage() {
+  const [data, setData] = useState({
+    username: "",
     email: "",
     password: "",
-    confirmPassword: "",
   });
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const [showPassword, setShowPassword] = useState(false);
+  const [openMsg, setOpenMsg] = useState(false);
+  const [msgToDisplay, setMsgToDisplay] = useState("");
+  const [msgType, setMsgType] = useState("info");
+  const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setMessage("");
-    setError("");
 
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
+    // Basic validation
+    if (!data.username || !data.email || !data.password) {
+      setMsgToDisplay("Please fill all required fields");
+      setMsgType("warning");
+      setOpenMsg(true);
       return;
     }
 
     try {
-      const response = await fetch("http://srv1022055.hstgr.cloud:3001/api/auth/register", {
+      const res = await fetch("http://srv1022055.hstgr.cloud:3001/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: form.name,
-          email: form.email,
-          password: form.password,
-        }),
+        body: JSON.stringify(data),
       });
 
-      const data = await response.json();
+      const result = await res.json();
 
-      if (response.ok) {
-        setMessage("Registration successful! You can now login.");
-        setForm({ name: "", email: "", password: "", confirmPassword: "" });
+      if (res.ok) {
+        setMsgType("success");
+        setMsgToDisplay(result.message || "Registration successful!");
+        setOpenMsg(true);
+        setTimeout(() => navigate("/login"), 1500);
       } else {
-        setError(data.message || "Registration failed");
+        setMsgType("error");
+        setMsgToDisplay(result.message || "Registration failed");
+        setOpenMsg(true);
       }
-    } catch (err) {
-      console.error(err);
-      setError("Something went wrong. Please try again later.");
+    } catch (error) {
+      setMsgType("error");
+      setMsgToDisplay("Server error, please try again later.");
+      setOpenMsg(true);
     }
   };
 
+  const handleClose = () => setOpenMsg(false);
+
   return (
-    <Container maxWidth="sm">
-      <Paper elevation={4} sx={{ p: 4, mt: 8, borderRadius: 3 }}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Register
+    <Container component="main" maxWidth="xs">
+      <Paper
+        elevation={6}
+        sx={{
+          mt: 8,
+          p: 4,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          borderRadius: 3,
+        }}
+      >
+        <Avatar sx={{ m: 1, bgcolor: "primary.main" }}>
+          <LockOutlined />
+        </Avatar>
+
+        <Typography component="h1" variant="h5">
+          Sign Up
         </Typography>
 
-        {message && <Alert severity="success">{message}</Alert>}
-        {error && <Alert severity="error">{error}</Alert>}
+        <Box component="form" onSubmit={handleRegister} sx={{ mt: 3 }}>
+          <TextField
+            required
+            fullWidth
+            label="Username"
+            margin="normal"
+            value={data.username}
+            onChange={(e) => setData({ ...data, username: e.target.value })}
+          />
 
-        <Box component="form" onSubmit={handleRegister}>
           <TextField
-            label="Full Name"
-            name="name"
-            fullWidth
-            margin="normal"
             required
-            value={form.name}
-            onChange={handleChange}
-          />
-          <TextField
+            fullWidth
             label="Email"
-            name="email"
             type="email"
-            fullWidth
             margin="normal"
-            required
-            value={form.email}
-            onChange={handleChange}
+            value={data.email}
+            onChange={(e) => setData({ ...data, email: e.target.value })}
           />
+
           <TextField
+            required
+            fullWidth
             label="Password"
-            name="password"
-            type="password"
-            fullWidth
+            type={showPassword ? "text" : "password"}
             margin="normal"
-            required
-            value={form.password}
-            onChange={handleChange}
+            value={data.password}
+            onChange={(e) => setData({ ...data, password: e.target.value })}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
-          <TextField
-            label="Confirm Password"
-            name="confirmPassword"
-            type="password"
-            fullWidth
-            margin="normal"
-            required
-            value={form.confirmPassword}
-            onChange={handleChange}
-          />
+
           <Button
             type="submit"
-            variant="contained"
             fullWidth
-            sx={{ mt: 3, py: 1 }}
+            variant="contained"
+            sx={{ mt: 3, mb: 2, py: 1.5 }}
           >
             Register
           </Button>
-          <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-            Already have an account?{" "}
-            <a href="/login" style={{ textDecoration: "none" }}>
-              Login
-            </a>
+
+          <Typography align="center" sx={{ mt: 2 }}>
+            Already have an account? <Link to="/login">Login</Link>
           </Typography>
         </Box>
       </Paper>
+
+      {/* Snackbar for messages */}
+      <Snackbar open={openMsg} autoHideDuration={4000} onClose={handleClose}>
+        <Alert
+          onClose={handleClose}
+          severity={msgType}
+          sx={{ width: "100%" }}
+          variant="filled"
+        >
+          {msgToDisplay}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }
