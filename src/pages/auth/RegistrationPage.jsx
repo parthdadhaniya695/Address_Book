@@ -34,7 +34,7 @@ export default function RegistrationPage() {
     }
 
     try {
-      const response = await fetch("http://91.108.104.14:3001/api/auth/register", {
+      const response = await fetch("http://srv1022055.hstgr.cloud:3001/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import api from "../../api/axios";
 import { Paper } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+import api from "../../api/axios";
 
 function ListContact() {
   const [data, setData] = useState([]);

@@ -1,48 +1,34 @@
-import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "./pages/auth/LoginPage";
-import RegistrationPage from "./pages/auth/RegistrationPage";
-import Home from "./pages/Home";
-import ProtectedRoute from "./ProtectedRoute";
+import { useState } from "react";
+import reactLogo from "./assets/react.svg";
+import viteLogo from "/vite.svg";
+import "@fontsource/roboto/300.css";
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
 
-export default function App() {
-  const token = localStorage.getItem("token");
+import LoginPage from "./pages/auth/LoginPage";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import HomePage from "./pages";
+import ProtectedRoute from "./context/ProtectedRoute";
+import AboutPage from "./pages/about/AboutPage";
+import ListContact from "./pages/contacts/ListContact";
+
+function App() {
+  const [count, setCount] = useState(0);
 
   return (
     <BrowserRouter>
       <Routes>
-        {/* Default route: redirect based on login state */}
-        <Route
-          path="/"
-          element={
-            token ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />
-          }
-        />
+        <Route path="/login" element={<LoginPage />}></Route>
 
-        {/* Public routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegistrationPage />} />
-
-        {/* Protected route */}
-        <Route
-          path="/home"
-          element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Optional 404 page */}
-        <Route
-          path="*"
-          element={
-            <h2 style={{ textAlign: "center", marginTop: "2rem" }}>
-              404 - Page Not Found
-            </h2>
-          }
-        />
+        <Route path="/" element={<ProtectedRoute></ProtectedRoute>}>
+          <Route index element={<HomePage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contacts" element={<ListContact />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
 }
+
+export default App;
