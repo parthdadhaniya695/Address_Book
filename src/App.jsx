@@ -11,24 +11,26 @@ import AboutPage from "./pages/about/AboutPage";
 import ListContact from "./pages/contacts/ListContact";
 import RegisterPage from "./pages/auth/RegistrationPage";
 import CreateContact from "./pages/contacts/CreateContact";
-import EditContact from "./pages/contacts/EditContact"; // ✅ Added
+import EditContact from "./pages/contacts/EditContact";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* ---------- Public Routes ---------- */}
+        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        {/* ---------- Protected Routes ---------- */}
+        {/* Protected Routes */}
         <Route path="/" element={<ProtectedRoute />}>
           <Route index element={<HomePage />} />
           <Route path="about" element={<AboutPage />} />
 
-          {/* ✅ Contact CRUD routes */}
+          {/* ✅ CONTACT CRUD ROUTES */}
           <Route path="contacts" element={<ListContact />} />
           <Route path="contacts/create" element={<CreateContact />} />
+
+          {/* ✅ Based on API docs (POST `/contact/update/:id`) */}
           <Route path="contacts/edit/:id" element={<EditContact />} />
         </Route>
       </Routes>
