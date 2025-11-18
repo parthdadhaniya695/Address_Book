@@ -1,54 +1,49 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api/axios";
 import {
+  Button,
   Paper,
-  Box,
+  Snackbar,
   Stack,
   Typography,
+  CircularProgress,
+  Box,
+  Alert,
   IconButton,
+  Fab,
   Tooltip,
-  Button,
 } from "@mui/material";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { DataGrid } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add"; // ✅ NEW
 
 function ListContact() {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
   const navigate = useNavigate();
 
-  // ✅ Fetch Contacts (initial load only)
   const fetchContacts = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const response = await api.get("contact/all", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setData([...(response.data?.data ?? [])]);
+      setLoading(true);
+      const res = await api.get("contact/all");
+      setData(res.data.data);
     } catch (error) {
-      console.error("Error fetching contacts:", error);
-    }
-  };
-
-  // ✅ Delete Contact
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this contact?")) return;
-
-    try {
-      const token = localStorage.getItem("token");
-
-      await api.delete(`contact/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      console.error("Failed to fetch contacts", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to fetch contacts",
+        severity: "error",
       });
-
-      // After delete -> refresh list (still required)
-      fetchContacts();
-    } catch (error) {
-      console.error("Error deleting contact:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,114 +51,164 @@ function ListContact() {
     fetchContacts();
   }, []);
 
-  // ✅ DataGrid Columns
+  const handleCloseSnackbar = () => setSnackbar({ ...snackbar, open: false });
+
+  const handleEdit = (id) => {
+    navigate(`/contact/edit/${id}`);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/contact/${id}`);
+      setSnackbar({
+        open: true,
+        message: "Contact deleted successfully!",
+        severity: "success",
+      });
+      fetchContacts();
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: "Failed to delete contact",
+        severity: "error",
+      });
+    }
+  };
+
   const columns = [
     { field: "display_name", headerName: "Name", flex: 1 },
     { field: "given_name", headerName: "First Name", flex: 1 },
     { field: "family_name", headerName: "Last Name", flex: 1 },
     { field: "job_title", headerName: "Job Title", flex: 1 },
     { field: "notes", headerName: "Notes", flex: 1 },
-
     {
       field: "phones",
       headerName: "Phone Number",
       flex: 1,
-      renderCell: (params) => {
-        const phones = params.row?.phones;
-        if (!phones || phones.length === 0) return "No data";
-
-        return (
-          <Stack spacing={0.3}>
-            {phones.map((p, index) => (
-              <a
-                key={index}
-                href={`tel:${p.phone_number}`}
-                style={{
-                  color: "black",
-                  textDecoration: "none",
-                  fontWeight: 600,
-                }}
-              >
-                {p.phone_number}
-              </a>
-            ))}
-          </Stack>
-        );
-      },
+      valueGetter: (value) => value?.[0]?.phone_number || "No data",
     },
-
     {
-      field: "action",
+      field: "actions",
       headerName: "Actions",
-      width: 130,
+      flex: 0.7,
       sortable: false,
-      renderCell: (params) => {
-        const id = params.row._id || params.row.id;
-        return (
-          <Stack direction="row" spacing={1}>
-            <Tooltip title="Edit Contact">
-              <IconButton color="primary" onClick={() => navigate(`/contacts/edit/${id}`)}>
-                <EditIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Delete Contact">
-              <IconButton color="error" onClick={() => handleDelete(id)}>
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-        );
-      },
+      filterable: false,
+      renderCell: (params) => (
+        <Stack direction="row" spacing={1}>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() => handleEdit(params.row.id)}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            color="error"
+            size="small"
+            onClick={() => handleDelete(params.row.id)}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Stack>
+      ),
     },
   ];
 
-  const paginationModel = { page: 0, pageSize: 5 };
-
   return (
-    <Box sx={{ p: 3, backgroundColor: "#f4f6f8", minHeight: "100vh" }}>
-      <Paper elevation={4} sx={{ p: 3, borderRadius: "12px" }}>
-        {/* ✅ Header without refresh button */}
-        <Stack direction="row" justifyContent="space-between" mb={2}>
-          <Typography variant="h5" fontWeight={600}>
+    <Box sx={{ p: 3, position: "relative" }}>
+      <Paper
+        elevation={3}
+        sx={{
+          p: 2,
+          borderRadius: 3,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        {/* Header */}
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Typography variant="h6" fontWeight="bold">
             📇 Contact List
           </Typography>
-
-          <Button
-            variant="contained"
-            color="success"
-            startIcon={<AddCircleOutlineIcon />}
-            sx={{ textTransform: "none", borderRadius: 2 }}
-            onClick={() => navigate("/contacts/create")}
-          >
-            Add Contact
-          </Button>
         </Stack>
 
-        <Box sx={{ height: 450 }}>
-          <DataGrid
-            rows={data}
-            getRowId={(row) => row._id || row.id}
-            columns={columns}
-            initialState={{ pagination: { paginationModel } }}
-            pageSizeOptions={[5, 10]}
-            checkboxSelection
-            sx={{
-              border: "none",
-              background: "#fafafa",
-              borderRadius: "8px",
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "#1976d2",
-                color: "black",
-                fontSize: "15px",
-                fontWeight: "bold",
-              },
-              "& .MuiDataGrid-row:hover": {
-                backgroundColor: "#e3f2fd",
-              },
-            }}
-          />
-        </Box>
+        {/* Data Section */}
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
+            <CircularProgress />
+          </Box>
+        ) : data.length === 0 ? (
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            align="center"
+            sx={{ py: 4 }}
+          >
+            No contacts found. Click “+” to create one.
+          </Typography>
+        ) : (
+          <div style={{ height: 450, width: "100%" }}>
+            <DataGrid
+              rows={data}
+              columns={columns}
+              getRowId={(row) => row.id}
+              initialState={{
+                pagination: { paginationModel: { pageSize: 5 } },
+              }}
+              pageSizeOptions={[5, 10, 20]}
+              sx={{
+                border: "none",
+                "& .MuiDataGrid-columnHeaders": {
+                  backgroundColor: "#f5f5f5",
+                  fontWeight: "bold",
+                },
+                "& .MuiDataGrid-row:hover": {
+                  backgroundColor: "#fafafa",
+                },
+              }}
+            />
+          </div>
+        )}
       </Paper>
+
+      {/* Floating Add Button */}
+      <Tooltip title="Add Contact">
+        <Fab
+          color="primary"
+          aria-label="add"
+          onClick={() => navigate("/contact/add")}
+          sx={{
+            position: "absolute",
+            bottom: 24,
+            right: 24,
+            boxShadow: 4,
+          }}
+        >
+          <AddIcon />
+        </Fab>
+      </Tooltip>
+
+      {/* Snackbar Feedback */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

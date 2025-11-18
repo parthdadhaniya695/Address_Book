@@ -23,11 +23,11 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [openMsg, setOpenMsg] = useState(false);
   const [msgToDisplay, setMsgToDisplay] = useState("");
-  const [msgType, setMsgType] = useState("info"); // success | error | info
+  const [msgType, setMsgType] = useState("info");
 
   const navigate = useNavigate();
 
-  // ✅ Redirect if user is already logged in
+  // Redirect if already logged in
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -38,11 +38,15 @@ export default function LoginPage() {
   const checkLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://srv1022055.hstgr.cloud:3001/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await fetch(
+        "http://srv1022055.hstgr.cloud:3001/api/auth/login",
+        {
+          method: "POST",
+          body: JSON.stringify(data),
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
       const result = await res.json();
 
       if (result.token) {
@@ -160,19 +164,6 @@ export default function LoginPage() {
           {msgToDisplay}
         </Alert>
       </Snackbar>
-
-      {/* Logout button for testing */}
-      <Button
-        onClick={() => {
-          localStorage.removeItem("token");
-          setMsgToDisplay("Logged out successfully!");
-          setMsgType("info");
-          setOpenMsg(true);
-        }}
-        sx={{ mt: 3 }}
-      >
-        Logout
-      </Button>
     </Container>
   );
 }

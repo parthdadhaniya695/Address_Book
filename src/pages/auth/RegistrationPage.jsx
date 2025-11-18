@@ -21,6 +21,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [openMsg, setOpenMsg] = useState(false);
   const [msgToDisplay, setMsgToDisplay] = useState("");
@@ -38,26 +39,53 @@ export default function RegisterPage() {
       return;
     }
 
-    try {
-      const res = await fetch("http://srv1022055.hstgr.cloud:3001/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+    // Email validation
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(data.email)) {
+      setMsgToDisplay("Invalid email format");
+      setMsgType("warning");
+      setOpenMsg(true);
+      return;
+    }
 
-      const result = await res.json();
+    try {
+      const res = await fetch(
+        "http://srv1022055.hstgr.cloud:3001/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      // Read raw response (helps catch backend errors)
+      const rawText = await res.text();
+      console.log("Raw backend response:", rawText);
+
+      let result = {};
+      try {
+        result = JSON.parse(rawText);
+      } catch {
+        result = { message: rawText };
+      }
 
       if (res.ok) {
         setMsgType("success");
         setMsgToDisplay(result.message || "Registration successful!");
         setOpenMsg(true);
+
+        // Redirect after success
         setTimeout(() => navigate("/login"), 1500);
       } else {
         setMsgType("error");
         setMsgToDisplay(result.message || "Registration failed");
         setOpenMsg(true);
       }
-    } catch (error) {
+    } catch (err) {
+      console.error("Registration Error =>", err);
       setMsgType("error");
       setMsgToDisplay("Server error, please try again later.");
       setOpenMsg(true);
@@ -111,15 +139,15 @@ export default function RegisterPage() {
             required
             fullWidth
             label="Password"
-            type={showPassword ? "text" : "password"}
             margin="normal"
+            type={showPassword ? "text" : "password"}
             value={data.password}
             onChange={(e) => setData({ ...data, password: e.target.value })}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
-                    onClick={() => setShowPassword((prev) => !prev)}
+                    onClick={() => setShowPassword((s) => !s)}
                     edge="end"
                   >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
@@ -144,7 +172,6 @@ export default function RegisterPage() {
         </Box>
       </Paper>
 
-      {/* Snackbar for messages */}
       <Snackbar open={openMsg} autoHideDuration={4000} onClose={handleClose}>
         <Alert
           onClose={handleClose}
