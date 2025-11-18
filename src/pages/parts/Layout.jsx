@@ -1,32 +1,40 @@
-import { Grid, Box } from "@mui/material";
+import { Box } from "@mui/material";
 import React from "react";
-import Menubar from "./Menubar";
 import Sidebar from "./Sidebar";
 import { Outlet } from "react-router-dom";
 
 function Layout() {
   return (
-    <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      
-      {/* Top Menubar */}
-      <Box sx={{ flexShrink: 0 }}>
-        <Menubar />
-      </Box>
+    <Box
+      sx={{
+        height: "100vh",
+        display: "flex",
+        backgroundColor: "#eef2f6",
+      }}
+    >
+      <Sidebar />
 
-      {/* Main content area (Sidebar + Outlet) */}
-      <Box sx={{ flexGrow: 1, display: "flex" }}>
-        
-        {/* Sidebar */}
-        <Box sx={{ width: "220px", bgcolor: "#f5f5f5", p: 2 }}>
-          <Sidebar />
-        </Box>
-
-        {/* Page Content */}
-        <Box sx={{ flexGrow: 1, p: 3 }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          padding: 3,
+          overflowY: "auto",
+        }}
+      >
+        <Box
+          sx={{
+            maxWidth: "95%",
+            margin: "0 auto",
+            backgroundColor: "#fff",
+            padding: 3,
+            borderRadius: "16px",
+            boxShadow: "0px 4px 18px rgba(0,0,0,0.06)",
+            minHeight: "200px",
+          }}
+        >
           <Outlet />
         </Box>
       </Box>
-
     </Box>
   );
 }
