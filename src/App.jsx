@@ -5,10 +5,13 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
 import LoginPage from "./pages/auth/LoginPage";
-import RegisterPage from "./pages/auth/RegistrationPage"; // ✅ Added import
+import RegisterPage from "./pages/auth/RegistrationPage";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import HomePage from "./pages";
+
 import ProtectedRoute from "./context/ProtectedRoute";
+import Layout from "./pages/parts/Layout";
+
+import HomePage from "./pages";
 import AboutPage from "./pages/about/AboutPage";
 import ListContact from "./pages/contacts/ListContact";
 import AddContact from "./pages/contacts/AddContact";
@@ -19,16 +22,26 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} /> {/* ✅ Added route */}
 
-        <Route path="/" element={<ProtectedRoute />}>
-          <Route index element={<HomePage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/contacts" element={<ListContact />} />
-          <Route path="/contact/add" element={<AddContact />} />
-          <Route path="/contact/edit/:id" element={<AddContact />} />
+        {/* Public Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        {/* Protected Main Layout */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+
+            <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+
+            {/* Contacts */}
+            <Route path="/contacts" element={<ListContact />} />
+            <Route path="/contact/add" element={<AddContact />} />
+            <Route path="/contact/edit/:id" element={<AddContact />} />
+
+          </Route>
         </Route>
+
       </Routes>
     </BrowserRouter>
   );

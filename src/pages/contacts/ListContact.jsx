@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api/axios";
 import {
-  Button,
   Paper,
   Snackbar,
   Stack,
@@ -17,7 +16,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import AddIcon from "@mui/icons-material/Add"; // ✅ NEW
+import AddIcon from "@mui/icons-material/Add";
 
 function ListContact() {
   const [data, setData] = useState([]);
@@ -53,9 +52,7 @@ function ListContact() {
 
   const handleCloseSnackbar = () => setSnackbar({ ...snackbar, open: false });
 
-  const handleEdit = (id) => {
-    navigate(`/contact/edit/${id}`);
-  };
+  const handleEdit = (id) => navigate(`/contact/edit/${id}`);
 
   const handleDelete = async (id) => {
     try {
@@ -75,18 +72,33 @@ function ListContact() {
     }
   };
 
+  // ---------------------------
+  // 🔥 UPDATED COLUMNS
+  // ---------------------------
   const columns = [
     { field: "display_name", headerName: "Name", flex: 1 },
     { field: "given_name", headerName: "First Name", flex: 1 },
     { field: "family_name", headerName: "Last Name", flex: 1 },
     { field: "job_title", headerName: "Job Title", flex: 1 },
     { field: "notes", headerName: "Notes", flex: 1 },
+
+    // 📌 EMAIL COLUMN ADDED
+    {
+      field: "emails",
+      headerName: "Email",
+      flex: 1,
+      valueGetter: (value) => value?.[0]?.email || "No Email",
+    },
+
+    // 📌 PHONE COLUMN
     {
       field: "phones",
       headerName: "Phone Number",
       flex: 1,
-      valueGetter: (value) => value?.[0]?.phone_number || "No data",
+      valueGetter: (value) => value?.[0]?.phone_number || "No Phone",
     },
+
+    // 📌 ACTIONS COLUMN
     {
       field: "actions",
       headerName: "Actions",
@@ -95,18 +107,11 @@ function ListContact() {
       filterable: false,
       renderCell: (params) => (
         <Stack direction="row" spacing={1}>
-          <IconButton
-            color="primary"
-            size="small"
-            onClick={() => handleEdit(params.row.id)}
-          >
+          <IconButton color="primary" size="small" onClick={() => handleEdit(params.row.id)}>
             <EditIcon fontSize="small" />
           </IconButton>
-          <IconButton
-            color="error"
-            size="small"
-            onClick={() => handleDelete(params.row.id)}
-          >
+
+          <IconButton color="error" size="small" onClick={() => handleDelete(params.row.id)}>
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Stack>
@@ -127,28 +132,19 @@ function ListContact() {
         }}
       >
         {/* Header */}
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="h6" fontWeight="bold">
             📇 Contact List
           </Typography>
         </Stack>
 
-        {/* Data Section */}
+        {/* Data Table / Loading */}
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
             <CircularProgress />
           </Box>
         ) : data.length === 0 ? (
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            align="center"
-            sx={{ py: 4 }}
-          >
+          <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 4 }}>
             No contacts found. Click “+” to create one.
           </Typography>
         ) : (
@@ -193,19 +189,14 @@ function ListContact() {
         </Fab>
       </Tooltip>
 
-      {/* Snackbar Feedback */}
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} variant="filled" sx={{ width: "100%" }}>
           {snackbar.message}
         </Alert>
       </Snackbar>
